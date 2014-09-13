@@ -16,7 +16,7 @@ import datetime
 
 __author__ = 'RFS4ever'
 __homepage__ = 'https://github.com/RFS4ever/pyDdnsPod'
-version = '0.2'
+version = '0.3'
 
 # Set global default timeout in seconds
 timeout = 10
@@ -48,8 +48,10 @@ def get_public_ip():
 
     addr = ('ns1.dnspod.net', 6666)
     sock = socket.create_connection(addr)
-    public_ip = sock.recv(16)
+    public_ip = sock.recv(16).decode('utf-8')
     sock.close()
+    now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S %a')
+    print(u'[{0:s}] Public ip is "{1:s}"'.format(now, public_ip))
     return public_ip
 
 
@@ -75,13 +77,15 @@ def ddns(ip):
             print('Error code: ', e.code)
     else:
         # everything is fine
-        return_info = res.read()
+        return_info = res.read().decode('utf-8')
         return_info = json.loads(return_info)
 
     if return_info.get('status', {}).get("code") == '1':
         now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S %a')
-        print('[%s] New ddns ip has changed!' % now)
+        print('=' * 60)
+        print('[%s] New ddns ip has changed to "%s"!' % (now, ip))
         print(json.dumps(return_info, indent=4))
+        print('=' * 60)
         return True
     else:
         raise Exception(return_info)
@@ -93,13 +97,14 @@ def main():
     while True:
         try:
             ip = get_public_ip()
-            now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S %a')
-            print(u'[{0:s}] Public ip is "{1:s}"'.format(now, ip))
+
             if current_ip != ip:
                 if ddns(ip):
                     current_ip = ip
         except Exception as e:
-            print(json.dumps(e, indent=4))
+            print(e)
+            # print(json.dumps(e.decode('utf-8'), indent=4))
+
         time.sleep(60 * 60)  # 1 hour (sleep in seconds)
 
 
