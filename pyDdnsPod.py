@@ -16,7 +16,7 @@ import datetime
 
 __author__ = 'RFS4ever'
 __homepage__ = 'https://github.com/RFS4ever/pyDdnsPod'
-version = '0.3'
+version = '0.5'
 
 # Set global default timeout in seconds
 timeout = 10
@@ -43,14 +43,24 @@ config = {
 }
 
 
-def get_public_ip():
+def get_current_time():
+    now = datetime.datetime.now()
+    return now.strftime('%Y/%m/%d %H:%M:%S %a')
+
+
+def get_public_ip(current_ip):
     """Create socket connection to get the current public ip address"""
 
     addr = ('ns1.dnspod.net', 6666)
-    sock = socket.create_connection(addr)
-    public_ip = sock.recv(16).decode('utf-8')
-    sock.close()
-    now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S %a')
+
+    try:
+        sock = socket.create_connection(addr)
+        public_ip = sock.recv(16).decode('utf-8')
+        sock.close()
+    except Exception as e:
+        public_ip = current_ip
+
+    now = get_current_time()
     print(u'[{0:s}] Public ip is "{1:s}"'.format(now, public_ip))
     return public_ip
 
@@ -81,11 +91,11 @@ def ddns(ip):
         return_info = json.loads(return_info)
 
     if return_info.get('status', {}).get("code") == '1':
-        now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S %a')
-        print('=' * 60)
-        print('[%s] New ddns ip has changed to "%s"!' % (now, ip))
+        now = get_current_time()
+        print('=' * 80)
+        print(u'[{0:s}] New ip changed to "{1:s}"!!!'.format(now, ip))
         print(json.dumps(return_info, indent=4))
-        print('=' * 60)
+        print('=' * 80)
         return True
     else:
         raise Exception(return_info)
@@ -94,9 +104,16 @@ def ddns(ip):
 def main():
     global current_ip
 
+    # Starting msg
+    now = get_current_time()
+    print('*' * 80)
+    print(u'[{0:s}] Bootstrapping {1:s}... '.format(now, config['headers']['User-Agent']))
+    print('*' * 80)
+
+    # Main body
     while True:
         try:
-            ip = get_public_ip()
+            ip = get_public_ip(current_ip)
 
             if current_ip != ip:
                 if ddns(ip):
