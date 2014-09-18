@@ -16,7 +16,7 @@ import datetime
 
 __author__ = 'RFS4ever'
 __homepage__ = 'https://github.com/RFS4ever/pyDdnsPod'
-version = '0.5'
+__version__ = '0.5'
 
 # Set global default timeout in seconds
 timeout = 10
@@ -29,7 +29,7 @@ config = {
     'headers': {
         "Content-type": "application/x-www-form-urlencoded",
         "Accept": "text/json",
-        "User-Agent": u"{0:s}'s pyDdnsPod/{1:s} (beyondrookie#gmail.com)".format(__author__, version)  # Change to yours
+        "User-Agent": u"{0:s}'s pyDdnsPod/{1:s} (beyondrookie#gmail.com)".format(__author__, __version__)
     },
     'params': {
         'login_email': 'email',  # Change to yours
@@ -48,7 +48,7 @@ def get_current_time():
     return now.strftime('%Y/%m/%d %H:%M:%S %a')
 
 
-def get_public_ip(current_ip):
+def get_public_ip(original_ip):
     """Create socket connection to get the current public ip address"""
 
     addr = ('ns1.dnspod.net', 6666)
@@ -58,7 +58,8 @@ def get_public_ip(current_ip):
         public_ip = sock.recv(16).decode('utf-8')
         sock.close()
     except Exception as e:
-        public_ip = current_ip
+        print(e)
+        public_ip = original_ip
 
     now = get_current_time()
     print(u'[{0:s}] Public ip is "{1:s}"'.format(now, public_ip))
